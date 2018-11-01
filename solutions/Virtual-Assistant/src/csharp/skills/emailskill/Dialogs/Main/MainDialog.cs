@@ -182,6 +182,11 @@ namespace EmailSkill
                         }
                         break;
                     }
+
+                case Events.CarStart:
+                    {
+                        break;
+                    }
             }
         }
 
@@ -286,6 +291,7 @@ namespace EmailSkill
         {
             public const string TokenResponseEvent = "tokens/response";
             public const string SkillBeginEvent = "skillBegin";
+            public const string CarStart = "IPA/CarStart";
         }
     }
 }

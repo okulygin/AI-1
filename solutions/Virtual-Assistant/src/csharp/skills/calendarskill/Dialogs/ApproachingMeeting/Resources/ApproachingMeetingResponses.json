@@ -1,0 +1,47 @@
+﻿{
+  "ApproachingMeetingMessage": {
+    "replies": [
+      {
+        "text": "You have a meeting approaching",
+        "speak": "You have a meeting in {EventTime} with {PeopleList} at {Location}"
+      }
+    ],
+    "inputHint": "acceptingInput"
+  },
+  "ShowApproachingMeetingCallInMessage": {
+    "replies": [
+      {
+        "text": "You have the following event on your calendar:",
+        "speak": "You have the following event on your calendar: You have {EventName} at {EventTime} with {PeopleList}. Would you like me to dial in the meeting for you?"
+      }
+    ],
+    "inputHint": "acceptingInput"
+  },
+  "ShowNextMeetingNoLocationMessage": {
+    "replies": [
+      {
+        "text": "You have the following event on your calendar:",
+        "speak": "You have the following event on your calendar: You have {EventName} at {EventTime} with {PeopleCount} people."
+      }
+    ],
+    "inputHint": "acceptingInput"
+  },
+  "ShowNextMeetingMessage": {
+    "replies": [
+      {
+        "text": "You have the following event on your calendar:",
+        "speak": "You have the following event on your calendar: You have {EventName} at {EventTime} with {PeopleCount} people at {Location}."
+      }
+    ],
+    "inputHint": "acceptingInput"
+  },
+  "ShowMultipleNextMeetingMessage": {
+    "replies": [
+      {
+        "text": "You have the following event on your calendar:",
+        "speak": "You have the following event on your calendar:"
+      }
+    ],
+    "inputHint": "acceptingInput"
+  }
+}

@@ -41,6 +41,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Dialogs\ApproachingMeeting\Resources\ApproachingMeetingResponses.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ApproachingMeetingResponses.tt</DependentUpon>
+    </Compile>
     <Compile Update="Dialogs\Cancel\Resources\CancelStrings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -105,6 +110,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Dialogs\ApproachingMeeting\Resources\ApproachingMeetingResponses.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ApproachingMeetingResponses.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Dialogs\CreateEvent\Resources\CreateEventResponses.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CreateEventResponses.cs</LastGenOutput>

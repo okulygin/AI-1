@@ -192,6 +192,16 @@ namespace CalendarSkill
 
                             await dc.Context.SendActivityAsync(response);
                         }
+
+                        break;
+                    }
+
+                case Events.CarStartEvent:
+                    {
+                        var response = dc.Context.Activity.CreateReply();
+                        response.Type = ActivityTypes.Message;
+                        response.Text = "CarStarted";
+                        dc.Context.SendActivityAsync(response);
                         break;
                     }
             }
@@ -299,6 +309,7 @@ namespace CalendarSkill
         {
             public const string TokenResponseEvent = "tokens/response";
             public const string SkillBeginEvent = "skillBegin";
+            public const string CarStartEvent = "IPA.CarStart";
         }
     }
 }
