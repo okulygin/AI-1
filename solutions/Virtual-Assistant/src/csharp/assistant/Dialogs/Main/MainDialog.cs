@@ -385,7 +385,17 @@ namespace VirtualAssistant
                         break;
                     }
 
-                case "play the song rainbow by jay chou":
+                case "play the song robot rock by daft punk":
+                    {
+                        response.Type = ActivityTypes.Event;
+                        response.Name = "PlayMusic";
+                        response.Value = "robot rock - daft punk";
+                        await dc.Context.SendActivityAsync(response);
+
+                        handled = true;
+                        break;
+                    }
+
                 case "播放周杰伦的歌曲彩虹":
                     {
                         response.Type = ActivityTypes.Event;

@@ -111,7 +111,7 @@ namespace EmailSkill
                     // send user message.
                     await service.SendMessageAsync(state.Content, state.Subject, state.Recipients);
 
-                    var nameListString = $"发送至: {state.Recipients.FirstOrDefault()?.EmailAddress.Name}";
+                    var nameListString = $"To: {state.Recipients.FirstOrDefault()?.EmailAddress.Name}";
                     if (state.Recipients.Count > 1)
                     {
                         nameListString += $" + {state.Recipients.Count - 1} more";
@@ -119,9 +119,9 @@ namespace EmailSkill
 
                     var emailCard = new EmailCardData
                     {
-                        Subject = "主题: " + state.Subject,
+                        Subject = "Subject: " + state.Subject,
                         NameList = nameListString,
-                        EmailContent = "内容: " + state.Content,
+                        EmailContent = "Content: " + state.Content,
                     };
 
                     emailCard.Speak = $"{emailCard.Subject}, {emailCard.NameList}, {emailCard.EmailContent}";

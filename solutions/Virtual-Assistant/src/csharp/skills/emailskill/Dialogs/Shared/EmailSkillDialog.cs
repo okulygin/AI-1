@@ -263,9 +263,9 @@ namespace EmailSkill
 
                 var emailCard = new EmailCardData
                 {
-                    Subject = "主题: " + state.Subject,
+                    Subject = "Subject: " + state.Subject,
                     NameList = nameListString,
-                    EmailContent = "内容: " + state.Content,
+                    EmailContent = "Content: " + state.Content,
                 };
 
                 emailCard.Speak = $"{emailCard.Subject}, {emailCard.NameList}, {emailCard.EmailContent}";
@@ -598,7 +598,7 @@ namespace EmailSkill
         public async Task<string> GetPreviewNameListString(WaterfallStepContext sc, string actionType)
         {
             var state = await _emailStateAccessor.GetAsync(sc.Context);
-            var nameListString = "发送至: ";
+            var nameListString = "To: ";
 
             switch (actionType)
             {
@@ -695,7 +695,7 @@ namespace EmailSkill
             var cardsData = new List<EmailCardData>();
             foreach (var message in messages)
             {
-                var nameListString = $"发送至: {message.ToRecipients.FirstOrDefault()?.EmailAddress.Name}";
+                var nameListString = $"To: {message.ToRecipients.FirstOrDefault()?.EmailAddress.Name}";
                 if (message.ToRecipients != null && message.ToRecipients.Count() > 1)
                 {
                     nameListString += $" + {message.ToRecipients.Count() - 1} more";
@@ -711,7 +711,7 @@ namespace EmailSkill
                     ReceivedDateTime = message.ReceivedDateTime == null
                     ? "Not available"
                     : message.ReceivedDateTime.Value.UtcDateTime.ToRelativeString(state.GetUserTimeZone()),
-                    Speak = message?.Subject + " 来自 " + message.Sender.EmailAddress.Name,
+                    Speak = message?.Subject + " from " + message.Sender.EmailAddress.Name,
                 };
                 cardsData.Add(emailCard);
             }
