@@ -1,5 +1,7 @@
-﻿using Microsoft.Bot.Builder;
+﻿using CalendarSkill.Dialogs.ApproachingMeeting.Resources;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Solutions.Extensions;
 using Microsoft.Bot.Solutions.Skills;
 using System;
 using System.Collections.Generic;
@@ -70,7 +72,7 @@ namespace CalendarSkill.Dialogs.ApproachingMeeting
                     if (string.IsNullOrEmpty(nextEvent.Location))
                     {
                         // call in if no location
-                        await sc.Context.SendActivityAsync(sc.Context.Activity.CreateReply(NextMeetingResponses.ShowNextMeetingNoLocationMessage, _responseBuilder, speakParams));
+                        await sc.Context.SendActivityAsync(sc.Context.Activity.CreateReply(ApproachingMeetingResponses.ShowApproachingMeetingCallInMessage, _responseBuilder, speakParams));
                     }
                     else
                     {
