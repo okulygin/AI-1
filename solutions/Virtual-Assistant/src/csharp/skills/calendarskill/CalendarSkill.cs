@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CalendarSkill.ServiceClients.GoogleAPI;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
@@ -34,7 +35,7 @@ namespace CalendarSkill
             _userState = userState ?? throw new ArgumentNullException(nameof(userState));
             _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
             _proactiveState = proactiveState ?? throw new ArgumentNullException(nameof(proactiveState));
-            _serviceManager = serviceManager ?? new ServiceManager();
+            _serviceManager = serviceManager ?? new ServiceManager(_services);
 
             _dialogs = new DialogSet(_conversationState.CreateProperty<DialogState>(nameof(DialogState)));
             _dialogs.Add(new MainDialog(_services, _conversationState, _userState, _proactiveState, _serviceManager, _skillMode));
