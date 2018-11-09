@@ -37,32 +37,32 @@
             return this;
         }
 
-        public override async Task ContinueConversationAsync(string botId, ConversationReference reference, BotCallbackHandler callback, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(botId))
-            {
-                throw new ArgumentNullException(nameof(botId));
-            }
+        //public override async Task ContinueConversationAsync(string botId, ConversationReference reference, BotCallbackHandler callback, CancellationToken cancellationToken)
+        //{
+            //if (string.IsNullOrWhiteSpace(botId))
+            //{
+            //    throw new ArgumentNullException(nameof(botId));
+            //}
 
-            if (reference == null)
-            {
-                throw new ArgumentNullException(nameof(reference));
-            }
+            //if (reference == null)
+            //{
+            //    throw new ArgumentNullException(nameof(reference));
+            //}
 
-            if (callback == null)
-            {
-                throw new ArgumentNullException(nameof(callback));
-            }
+            //if (callback == null)
+            //{
+            //    throw new ArgumentNullException(nameof(callback));
+            //}
 
-            var activity = new Activity().ApplyConversationReference(reference, true);
+            //var activity = new Activity().ApplyConversationReference(reference);
 
-            using (var context = new TurnContext(this, activity))
-            {
-                await RunPipelineAsync(context, callback, cancellationToken);
-            }
+            //using (var context = new TurnContext(this, activity))
+            //{
+            //    await RunPipelineAsync(context, callback, cancellationToken);
+            //}
 
-            await base.ContinueConversationAsync(botId, reference, callback, cancellationToken);
-        }
+        //    await base.ContinueConversationAsync(botId, reference, callback, cancellationToken);
+        //}
 
         public Activity GetNextReply()
         {

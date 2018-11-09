@@ -1,4 +1,10 @@
-﻿using CalendarSkill.Dialogs.Main.Resources;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
+using CalendarSkill.Common;
+using CalendarSkill.Dialogs.Main.Resources;
 using CalendarSkill.Dialogs.Shared.Resources;
 using Luis;
 using Microsoft.Bot.Builder;
@@ -9,15 +15,9 @@ using Microsoft.Bot.Solutions;
 using Microsoft.Bot.Solutions.Extensions;
 using Microsoft.Bot.Solutions.Skills;
 using Microsoft.Recognizers.Text;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
 using Microsoft.Recognizers.Text.DateTime;
+using Newtonsoft.Json.Linq;
 using static Microsoft.Recognizers.Text.Culture;
-using CalendarSkill.Common;
 
 namespace CalendarSkill
 {

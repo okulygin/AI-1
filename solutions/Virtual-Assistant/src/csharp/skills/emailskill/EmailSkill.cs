@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Microsoft.Bot.Solutions.Models;
 using Microsoft.Bot.Solutions.Skills;
 
 namespace EmailSkill
@@ -24,7 +25,7 @@ namespace EmailSkill
         private IMailSkillServiceManager _serviceManager;
         private DialogSet _dialogs;
 
-        public EmailSkill(ISkillConfiguration services, ConversationState conversationState, UserState userState, IMailSkillServiceManager serviceManager = null, bool skillMode = false)
+        public EmailSkill(ISkillConfiguration services, ConversationState conversationState, UserState userState, ProactiveState proactiveState, IMailSkillServiceManager serviceManager = null, bool skillMode = false)
         {
             _skillMode = skillMode;
             _services = services ?? throw new ArgumentNullException(nameof(services));

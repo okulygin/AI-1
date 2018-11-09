@@ -1,14 +1,14 @@
-﻿using CalendarSkill.Dialogs.ApproachingMeeting.Resources;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Solutions.Extensions;
-using Microsoft.Bot.Solutions.Skills;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CalendarSkill.Dialogs.ApproachingMeeting.Resources;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
+using Microsoft.Bot.Solutions.Extensions;
+using Microsoft.Bot.Solutions.Skills;
 
 namespace CalendarSkill.Dialogs.ApproachingMeeting
 {
@@ -18,23 +18,25 @@ namespace CalendarSkill.Dialogs.ApproachingMeeting
             SkillConfiguration services,
             IStatePropertyAccessor<CalendarSkillState> accessor,
             IServiceManager serviceManager)
-            : base(nameof(NextMeetingDialog), services, accessor, serviceManager)
+            : base(nameof(ApproachingMeetingDialog), services, accessor, serviceManager)
         {
-            var nextMeeting = new WaterfallStep[]
+            var approachingMeeting = new WaterfallStep[]
             {
-                GetAuthToken,
-                AfterGetAuthToken,
-                ShowApproachingEventAsync,
+                //GetAuthToken,
+                //AfterGetAuthToken,
+                ShowApproachingEvent,
+                NavigateToMeetingLocation,
             };
 
             // Define the conversation flow using a waterfall model.
-            AddDialog(new WaterfallDialog(Actions.ShowEventsSummary, nextMeeting));
+            AddDialog(new WaterfallDialog(Actions.ShowApproachingEvent, approachingMeeting));
+            AddDialog(new ConfirmPrompt(Actions.NavigateToMeetingLocation));
 
             // Set starting dialog for component
-            InitialDialogId = Actions.ShowEventsSummary;
+            InitialDialogId = Actions.ShowApproachingEvent;
         }
 
-        public async Task<DialogTurnResult> ShowApproachingEventAsync(WaterfallStepContext sc, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<DialogTurnResult> ShowApproachingEvent(WaterfallStepContext sc, CancellationToken cancellationToken = default(CancellationToken))
         {
             try
             {
@@ -44,48 +46,68 @@ namespace CalendarSkill.Dialogs.ApproachingMeeting
                     return await sc.EndDialogAsync(true);
                 }
 
-                var calendarService = _serviceManager.InitCalendarService(state.APIToken, state.EventSource, state.GetUserTimeZone());
+                var calendarService = _serviceManager.InitCalendarService(state.APIToken, state.EventSource);
 
                 var eventList = await calendarService.GetUpcomingEvents();
                 EventModel nextEvent = null;
 
                 // get the first event
-                foreach (var item in eventList)
-                {
-                    if (item.IsCancelled != true)
-                    {
-                        nextEvent = item;
-                        break;
-                    }
-                }
+                //foreach (var item in eventList)
+                //{
+                //    if (item.IsCancelled != true)
+                //    {
+                //        nextEvent = item;
+                //        break;
+                //    }
+                //}
 
-                if (nextEvent != null && nextEvent.IsAllDay == false)
+                nextEvent = new EventModel (EventSource.Microsoft) { Title = "Test", TimeZone = TimeZoneInfo.Utc, StartTime = DateTime.UtcNow.AddMinutes(-30), Attendees = new System.Collections.Generic.List<EventModel.Attendee> { new EventModel.Attendee { Address = "a", DisplayName = "Lauren" } }, Location = "CCP"};
+                var timeDiff = DateTime.UtcNow.Subtract(nextEvent.StartTime).TotalMinutes;
+                if (nextEvent != null && (!nextEvent.IsAllDay.HasValue || nextEvent.IsAllDay == false) && timeDiff < 60)
                 {
                     var speakParams = new StringDictionary()
                     {
                         { "EventName", nextEvent.Title },
-                        { "EventTime", nextEvent.StartTime.ToString("h:mm tt") },
-                        { "PeopleList", string.Join(",", nextEvent.Attendees) },
-                        { "Location", nextEvent.Location },
+                        { "EventMinutesLeft", timeDiff.ToString("N0") },
+                        { "PeopleList", string.Join(",", nextEvent.Attendees.Select(a => a.DisplayName)) },
+                        { "EventLocation", nextEvent.Location },
                     };
 
-                    if (string.IsNullOrEmpty(nextEvent.Location))
+                    // ask the user whether or not navigate to the location
+                    return await sc.PromptAsync(Actions.NavigateToMeetingLocation, new PromptOptions
                     {
-                        // call in if no location
-                        await sc.Context.SendActivityAsync(sc.Context.Activity.CreateReply(ApproachingMeetingResponses.ShowApproachingMeetingCallInMessage, _responseBuilder, speakParams));
-                    }
-                    else
-                    {
-                        // calculate time if there's location
-                        speakParams.Add("Location", nextEventList[0].Location);
-                        await sc.Context.SendActivityAsync(sc.Context.Activity.CreateReply(NextMeetingResponses.ShowNextMeetingMessage, _responseBuilder, speakParams));
-                    }
-
-                    await ShowMeetingList(sc, nextEventList, true);
+                        Prompt = sc.Context.Activity.CreateReply(ApproachingMeetingResponses.ApproachingMeetingNavigateToLocationMessage, _responseBuilder, speakParams),
+                    });
                 }
 
                 state.Clear();
                 return await sc.EndDialogAsync(true);
+            }
+            catch
+            {
+                await HandleDialogExceptions(sc);
+                throw;
+            }
+        }
+
+        public async Task<DialogTurnResult> NavigateToMeetingLocation(WaterfallStepContext sc, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                var result = (bool)sc.Result;
+                if (result)
+                {
+                    // We trigger a Token Request from the Parent Bot by sending a "TokenRequest" event back and then waiting for a "TokenResponse"
+                    // TODO Error handling - if we get a new activity that isn't an event
+                    var response = sc.Context.Activity.CreateReply();
+                    response.Type = ActivityTypes.Event;
+                    response.Name = "tokens/request";
+
+                    // Send the tokens/request Event
+                    await sc.Context.SendActivityAsync(response);
+                }
+
+                return await sc.EndDialogAsync();
             }
             catch
             {

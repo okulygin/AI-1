@@ -158,6 +158,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Dialogs\ApproachingMeeting\Resources\ApproachingMeetingResponses.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="Dialogs\CreateEvent\Resources\CreateEventResponses.zh.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

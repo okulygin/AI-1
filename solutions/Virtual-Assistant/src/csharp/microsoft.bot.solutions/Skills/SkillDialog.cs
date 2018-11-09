@@ -3,6 +3,7 @@ using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Solutions.Middleware;
+using Microsoft.Bot.Solutions.Models;
 using Microsoft.Bot.Solutions.Resources;
 using System;
 using System.Collections.Generic;
@@ -145,12 +146,13 @@ namespace Microsoft.Bot.Solutions.Skills
                 // Initialize skill state
                 var userState = new UserState(storage);
                 var conversationState = new ConversationState(storage);
+                var proactiveState = new ProactiveState(storage);
 
                 // Create skill instance
                 try
                 {
                     var skillType = Type.GetType(skillDefinition.Assembly);
-                    _activatedSkill = (IBot)Activator.CreateInstance(skillType, skillConfiguration, conversationState, userState, null, true);
+                    _activatedSkill = (IBot)Activator.CreateInstance(skillType, skillConfiguration, conversationState, userState, proactiveState, null, true);
                 }
                 catch (Exception e)
                 {
@@ -178,7 +180,7 @@ namespace Microsoft.Bot.Solutions.Skills
                 };
 
                 _inProcAdapter.Use(new EventDebuggerMiddleware());
-                _inProcAdapter.Use(new SetLocaleMiddleware(dc.Context.Activity.Locale ?? "zh-cn"));
+                //_inProcAdapter.Use(new SetLocaleMiddleware(dc.Context.Activity.Locale ?? "zh-cn"));
                 _inProcAdapter.Use(new AutoSaveStateMiddleware(userState, conversationState));
                 _skillInitialized = true;
             }
@@ -257,7 +259,15 @@ namespace Microsoft.Bot.Solutions.Skills
                 // send skill queue to User
                 if (queue.Count > 0)
                 {
-                    await dc.Context.SendActivitiesAsync(queue.ToArray());
+                    var act = queue[0];
+                    if (!string.IsNullOrWhiteSpace(act.Text) && act.Text.ToLower() == "done")
+                    {
+                        await dc.Context.Adapter.ContinueConversationAsync("1", queue[0].GetConversationReference(), CreateCallback(new ProactiveModel()), default(CancellationToken));
+                    }
+                    else
+                    {
+                        await dc.Context.SendActivitiesAsync(queue.ToArray());
+                    }
                 }
 
                 // handle ending the skill conversation
@@ -283,6 +293,21 @@ namespace Microsoft.Bot.Solutions.Skills
                 await dc.EndDialogAsync();
                 throw;
             }
+        }
+
+        // Creates the turn logic to use for the proactive message.
+        private BotCallbackHandler CreateCallback(ProactiveModel data)
+        {
+            return async (turnContext, token) =>
+            {
+                await turnContext.SendActivityAsync("done");
+                //var dialogSet = new DialogSet(_conversationState.CreateProperty<DialogState>(nameof(DialogState)));
+                //dialogSet.Add(new ApproachingMeetingDialog(_services, _stateAccessor, _serviceManager));
+
+                //// Send the user a proactive confirmation message.
+                //var context = await dialogSet.CreateContextAsync(turnContext);
+                //await context.BeginDialogAsync(nameof(ApproachingMeetingDialog));
+            };
         }
 
         private class Events

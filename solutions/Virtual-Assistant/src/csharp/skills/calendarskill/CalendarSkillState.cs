@@ -1,4 +1,5 @@
-﻿using Microsoft.Graph;
+﻿using Microsoft.Bot.Schema;
+using Microsoft.Graph;
 using System;
 using System.Collections.Generic;
 
@@ -43,6 +44,8 @@ namespace CalendarSkill
         }
 
         public User User { get; set; }
+
+        public ConversationReference ConversationReference { get; set; }
 
         public UserInformation UserInfo { get; set; } = new UserInformation();
 

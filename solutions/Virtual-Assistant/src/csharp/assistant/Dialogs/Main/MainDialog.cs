@@ -348,6 +348,18 @@ namespace VirtualAssistant
                         break;
                     }
 
+                    case Events.ApproachingMeetingEvent:
+                        {
+                            var calendarSkill = _skillRouter.IdentifyRegisteredSkill(Dispatch.Intent.l_Calendar.ToString());
+                            await RouteToSkillAsync(dc, new SkillDialogOptions
+                            {
+                                SkillDefinition = calendarSkill
+                            });
+
+                            forward = false;
+                            break;
+                        }
+
                     default:
                     {
                         await dc.Context.SendActivityAsync(new Activity(type: ActivityTypes.Trace, text: $"Unknown Event {ev.Name} was received but not processed."));
@@ -378,5 +390,6 @@ namespace VirtualAssistant
         public const string ActiveRouteUpdate = "POI.ActiveRoute";
         public const string ResetUser = "IPA.ResetUser";
         public const string CarStart = "IPA.CarStart";
+        public const string ApproachingMeetingEvent = "EmailSkill.ApproachingMeeting";
     }
 }

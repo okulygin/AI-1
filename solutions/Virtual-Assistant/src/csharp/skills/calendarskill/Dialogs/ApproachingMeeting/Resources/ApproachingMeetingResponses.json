@@ -17,11 +17,11 @@
     ],
     "inputHint": "acceptingInput"
   },
-  "ShowNextMeetingNoLocationMessage": {
+  "ApproachingMeetingNavigateToLocationMessage": {
     "replies": [
       {
-        "text": "You have the following event on your calendar:",
-        "speak": "You have the following event on your calendar: You have {EventName} at {EventTime} with {PeopleCount} people."
+        "text": "You have a meeting in {EventMinutesLeft} minutes in {EventLocation} with {PeopleList}, do you want to navigate to the meeting location?",
+        "speak": "You have a meeting in {EventMinutesLeft} minutes in {EventLocation} with {PeopleList}, do you want to navigate to the meeting location?"
       }
     ],
     "inputHint": "acceptingInput"

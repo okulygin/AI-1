@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using CalendarSkill.Dialogs.ApproachingMeeting;
 using CalendarSkill.Dialogs.Main.Resources;
 using CalendarSkill.Dialogs.Shared.Resources;
 using Luis;
@@ -14,7 +15,9 @@ using Microsoft.Bot.Schema;
 using Microsoft.Bot.Solutions;
 using Microsoft.Bot.Solutions.Dialogs;
 using Microsoft.Bot.Solutions.Extensions;
+using Microsoft.Bot.Solutions.Models;
 using Microsoft.Bot.Solutions.Skills;
+using static Microsoft.Bot.Solutions.Models.ProactiveModel;
 
 namespace CalendarSkill
 {
@@ -24,14 +27,17 @@ namespace CalendarSkill
         private SkillConfiguration _services;
         private UserState _userState;
         private ConversationState _conversationState;
+        private ProactiveState _proactiveState;
         private IServiceManager _serviceManager;
         private IStatePropertyAccessor<CalendarSkillState> _stateAccessor;
+        private IStatePropertyAccessor<ProactiveModel> _proactiveStateAccessor;
         private CalendarSkillResponseBuilder _responseBuilder = new CalendarSkillResponseBuilder();
 
         public MainDialog(
             SkillConfiguration services,
             ConversationState conversationState,
             UserState userState,
+            ProactiveState proactiveState,
             IServiceManager serviceManager,
             bool skillMode)
             : base(nameof(MainDialog))
@@ -40,10 +46,12 @@ namespace CalendarSkill
             _services = services;
             _userState = userState;
             _conversationState = conversationState;
+            _proactiveState = proactiveState;
             _serviceManager = serviceManager;
 
             // Initialize state accessor
             _stateAccessor = _conversationState.CreateProperty<CalendarSkillState>(nameof(CalendarSkillState));
+            _proactiveStateAccessor = _proactiveState.CreateProperty<ProactiveModel>(nameof(ProactiveModel));
 
             // Register dialogs
             RegisterDialogs();
@@ -60,6 +68,25 @@ namespace CalendarSkill
 
         protected override async Task RouteAsync(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
+            // save the ConversationReference for proactive scenarios
+            var proactiveState = await _proactiveStateAccessor.GetAsync(dc.Context, () => new ProactiveModel());
+
+            ProactiveModel model = new ProactiveModel();
+            ProactiveData data;
+            var userId = dc.Context.Activity.From.Id;
+            if (proactiveState.TryGetValue(userId, out data))
+            {
+                data.Conversation = dc.Context.Activity.GetConversationReference();
+            }
+            else
+            {
+                data = new ProactiveData { Conversation = dc.Context.Activity.GetConversationReference() };
+            }
+
+            model[userId] = data;
+            await _proactiveStateAccessor.SetAsync(dc.Context, model);
+            await _proactiveState.SaveChangesAsync(dc.Context);
+
             var state = await _stateAccessor.GetAsync(dc.Context, () => new CalendarSkillState());
 
             // If dispatch result is general luis model
@@ -196,15 +223,40 @@ namespace CalendarSkill
                         break;
                     }
 
-                case Events.CarStartEvent:
+                case Events.ApproachingMeetingEvent:
                     {
-                        var response = dc.Context.Activity.CreateReply();
-                        response.Type = ActivityTypes.Message;
-                        response.Text = "CarStarted";
-                        dc.Context.SendActivityAsync(response);
+                        var approachingMeetingEvent = dc.Context.Activity.AsEventActivity();
+                        //var event = Json approachingMeetingEvent 
+
+                        var state = await _proactiveStateAccessor.GetAsync(dc.Context, () => new ProactiveModel());
+
+                        var skillOptions = new CalendarSkillDialogOptions
+                        {
+                            SkillMode = _skillMode,
+                        };
+
+                        await dc.Context.SendActivityAsync("done");
+                        //await dc.Context.Adapter.ContinueConversationAsync(dc.Context.Activity.Recipient.Id, state[dc.Context.Activity.From.Id].Conversation, CreateCallback(state), cancellationToken);
+
+                        //await dc.BeginDialogAsync(nameof(ApproachingMeetingDialog), skillOptions);
                         break;
                     }
             }
+        }
+
+        // Creates the turn logic to use for the proactive message.
+        private BotCallbackHandler CreateCallback(ProactiveModel data)
+        {
+            return async (turnContext, token) =>
+            {
+                await turnContext.SendActivityAsync("done");
+                //var dialogSet = new DialogSet(_conversationState.CreateProperty<DialogState>(nameof(DialogState)));
+                //dialogSet.Add(new ApproachingMeetingDialog(_services, _stateAccessor, _serviceManager));
+
+                //// Send the user a proactive confirmation message.
+                //var context = await dialogSet.CreateContextAsync(turnContext);
+                //await context.BeginDialogAsync(nameof(ApproachingMeetingDialog));
+            };
         }
 
         protected override async Task<InterruptionAction> OnInterruptDialogAsync(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
@@ -303,6 +355,7 @@ namespace CalendarSkill
             AddDialog(new SummaryDialog(_services, _stateAccessor, _serviceManager));
             AddDialog(new UpdateEventDialog(_services, _stateAccessor, _serviceManager));
             AddDialog(new CancelDialog());
+            AddDialog(new ApproachingMeetingDialog(_services, _stateAccessor, _serviceManager));
         }
 
         private class Events
@@ -310,6 +363,7 @@ namespace CalendarSkill
             public const string TokenResponseEvent = "tokens/response";
             public const string SkillBeginEvent = "skillBegin";
             public const string CarStartEvent = "IPA.CarStart";
+            public const string ApproachingMeetingEvent = "EmailSkill.ApproachingMeeting";
         }
     }
 }
