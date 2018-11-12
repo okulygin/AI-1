@@ -220,6 +220,6 @@
         "speak": "我找到到达目的地的一条线路。"
       }
     ],
-    "inputHint": "expectingInput"
+    "inputHint": "ignoringInput"
   }
 }
