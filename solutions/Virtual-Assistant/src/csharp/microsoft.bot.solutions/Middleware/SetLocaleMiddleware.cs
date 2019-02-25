@@ -13,21 +13,18 @@ namespace Microsoft.Bot.Solutions.Middleware
     /// </summary>
     public class SetLocaleMiddleware : IMiddleware
     {
-        private readonly string defaultLocale;
+        private readonly string _defaultLocale;
 
-        public SetLocaleMiddleware(string defaultDefaultLocale)
+        public SetLocaleMiddleware(string defaultLocale)
         {
-            this.defaultLocale = defaultDefaultLocale;
+            _defaultLocale = defaultLocale;
         }
 
         public async Task OnTurnAsync(ITurnContext context, NextDelegate next, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var cultureInfo = !string.IsNullOrWhiteSpace(context.Activity.Locale) ? new CultureInfo(context.Activity.Locale) : new CultureInfo(this.defaultLocale);
+            var cultureInfo = !string.IsNullOrWhiteSpace(context.Activity.Locale) ? new CultureInfo(context.Activity.Locale) : new CultureInfo(this._defaultLocale);
 
             CultureInfo.CurrentUICulture = CultureInfo.CurrentCulture = cultureInfo;
-
-            // If the current activity locale is empty or not supported (i.e. "iv"), set its culture to the default.
-            context.Activity.Locale = cultureInfo.Name;
 
             await next(cancellationToken).ConfigureAwait(false);
         }

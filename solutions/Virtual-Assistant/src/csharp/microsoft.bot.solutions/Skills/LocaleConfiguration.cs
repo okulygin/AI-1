@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.AI.QnA;
+using Microsoft.Bot.Solutions.Middleware.Telemetry;
 
 namespace Microsoft.Bot.Solutions.Skills
 {
@@ -18,7 +17,7 @@ namespace Microsoft.Bot.Solutions.Skills
         /// <value>
         /// A <see cref="LuisRecognizer"/> client instance created based on configuration in the .bot file.
         /// </value>
-        public TelemetryLuisRecognizer DispatchRecognizer { get; set; }
+        public ITelemetryLuisRecognizer DispatchRecognizer { get; set; }
 
         /// <summary>
         /// Gets or sets the LUIS Services used.

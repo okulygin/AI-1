@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,22 +8,29 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Dialogs.BotResponseFormatters;
-using Microsoft.Bot.Solutions.Extensions;
+using Microsoft.Bot.Solutions.Middleware.Telemetry;
 using Microsoft.Bot.Solutions.Resources;
+using Microsoft.Bot.Solutions.Responses;
 using Microsoft.Bot.Solutions.Skills;
 
 namespace Microsoft.Bot.Solutions.Authentication
 {
     public class MultiProviderAuthDialog : ComponentDialog
     {
-        private ISkillConfiguration _skillConfiguration;
-        private CommonResponseBuilder _responseBuilder = new CommonResponseBuilder();
+        private SkillConfigurationBase _skillConfiguration;
+        private ResponseManager _responseManager;
+        private string _selectedAuthType = string.Empty;
 
-        public MultiProviderAuthDialog(ISkillConfiguration skillConfiguration)
+        public MultiProviderAuthDialog(SkillConfigurationBase skillConfiguration)
             : base(nameof(MultiProviderAuthDialog))
         {
             _skillConfiguration = skillConfiguration;
+            _responseManager = new ResponseManager(
+                new IResponseIdCollection[]
+                {
+                    new CommonResponses()
+                },
+                _skillConfiguration.LocaleConfigurations.Keys.ToArray());
 
             if (_skillConfiguration.IsAuthenticatedSkill && !_skillConfiguration.AuthenticationConnections.Any())
             {
@@ -48,7 +56,6 @@ namespace Microsoft.Bot.Solutions.Authentication
                         ConnectionName = connection.Key,
                         Title = CommonStrings.Login,
                         Text = string.Format(CommonStrings.LoginDescription, connection.Key),
-                        Timeout = 30000,
                     },
                     AuthPromptValidator));
             }
@@ -88,7 +95,7 @@ namespace Microsoft.Bot.Solutions.Authentication
 
                     return await stepContext.PromptAsync(DialogIds.ProviderPrompt, new PromptOptions
                     {
-                        Prompt = stepContext.Context.Activity.CreateReply(CommonResponses.ConfiguredAuthProvidersPrompt),
+                        Prompt = _responseManager.GetResponse(CommonResponses.ConfiguredAuthProvidersPrompt),
                         Choices = choices,
                     });
                 }
@@ -107,7 +114,7 @@ namespace Microsoft.Bot.Solutions.Authentication
 
                     return await stepContext.PromptAsync(DialogIds.ProviderPrompt, new PromptOptions
                     {
-                        Prompt = stepContext.Context.Activity.CreateReply(CommonResponses.AuthProvidersPrompt),
+                        Prompt = _responseManager.GetResponse(CommonResponses.AuthProvidersPrompt),
                         Choices = choices,
                     });
                 }
@@ -116,26 +123,33 @@ namespace Microsoft.Bot.Solutions.Authentication
 
         private async Task<DialogTurnResult> PromptForAuth(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var authType = string.Empty;
             if (stepContext.Result is string)
             {
-                authType = stepContext.Result as string;
+                _selectedAuthType = stepContext.Result as string;
             }
             else if (stepContext.Result is FoundChoice)
             {
                 var choice = stepContext.Result as FoundChoice;
-                authType = choice.Value;
+                _selectedAuthType = choice.Value;
             }
 
-            return await stepContext.PromptAsync(authType, new PromptOptions());
+            return await stepContext.PromptAsync(_selectedAuthType, new PromptOptions());
         }
 
         private async Task<DialogTurnResult> HandleTokenResponse(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var tokenResponse = stepContext.Result as TokenResponse;
-            var result = await CreateProviderTokenResponse(stepContext.Context, tokenResponse);
+            if (tokenResponse != null && !string.IsNullOrWhiteSpace(tokenResponse.Token))
+            {
+                var result = await CreateProviderTokenResponse(stepContext.Context, tokenResponse);
 
-            return await stepContext.EndDialogAsync(result);
+                return await stepContext.EndDialogAsync(result);
+            }
+            else
+            {
+                TelemetryClient.TrackEventEx("TokenRetrievalFailure", stepContext.Context.Activity);
+                return new DialogTurnResult(DialogTurnStatus.Cancelled);
+            }
         }
 
         private async Task<ProviderTokenResponse> CreateProviderTokenResponse(ITurnContext context, TokenResponse tokenResponse)
@@ -154,7 +168,7 @@ namespace Microsoft.Bot.Solutions.Authentication
         private Task<bool> AuthPromptValidator(PromptValidatorContext<TokenResponse> promptContext, CancellationToken cancellationToken)
         {
             var token = promptContext.Recognized.Value;
-            if (token != null)
+            if (token != null && !string.IsNullOrWhiteSpace(token.Token))
             {
                 return Task.FromResult(true);
             }

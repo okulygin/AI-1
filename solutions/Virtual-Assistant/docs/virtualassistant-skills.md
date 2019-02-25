@@ -17,7 +17,8 @@ The following Skills are available at this time, these represent initial priorit
 - [Productivity - Email](./virtualassistant-skills-productivity-email.md)
 - [Productivity - ToDo](./virtualassistant-skills-productivity-todo.md)
 - [Points of Interest](./virtualassistant-skills-pointofinterest.md)
-- Automotive - Coming Soon 
+- [Automotive](./virtualassistant-skills-automotive.md)
+- [Experimental Skills](./virtualassistant-experimental-skills.md)
 
 ## Skill Invocation Flow
 
@@ -29,7 +30,7 @@ The custom SkillDialog bootstraps the Adapter and processes appropriate middlewa
 
  ## Skill Registration
 
- Each Skill is registred with a Virtual Assistant through the configuration entry shown below
+ Each Skill is registered with a Virtual Assistant through the configuration entry shown below
 
  - Name: The name of your Skill
   - Assembly: Skills are invoked "in process" and are dynamically loaded using Reflection thus enabling a configuration only approach

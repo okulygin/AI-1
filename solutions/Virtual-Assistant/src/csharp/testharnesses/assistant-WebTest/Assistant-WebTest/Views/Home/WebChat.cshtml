@@ -2,50 +2,41 @@
 @{
     ViewData["Title"] = "Web Chat";
 }
-    <div id="webchat"></div>
-    <script src="https://cdn.botframework.com/botframework-webchat/latest/CognitiveServices.js"></script>
-    <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
-    <script>
+<div class="content-row">
+    <div id="webchat" role="main"></div>
+</div>
+<script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+<script>
+    (async function() {
         var userId = '@Model.UserID';
         var userName = '@Model.UserName';
+        var speechKey = '@Model.SpeechKey';
+        var speechRegion = '@Model.SpeechRegion';
+        var directLineToken = '@Model.DirectLineToken';
 
         // Initials are captured used for user avatar
         var userInitials = userName.replace(/(\S)\S*\s*/ig, "$1");
 
-        const speechOptions = {
-            speechRecognizer: new CognitiveServices.SpeechRecognizer({ subscriptionKey: '@Model.SpeechKey' }),
-            speechSynthesizer: new CognitiveServices.SpeechSynthesizer({
-                gender: CognitiveServices.SynthesisGender.Female,
-                subscriptionKey: '@Model.SpeechKey',
-                voiceName: '@Model.VoiceName'
-            })
-        };
+        let speechFactory;
 
-        var user = { id: userId, name: 'default-user', role: 'user' };
-
+        if (speechKey != '' && speechRegion != '') {
+            speechFactory  = await window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory({
+                region: speechRegion,
+                subscriptionKey: speechKey
+            });
+        }
+        
         var bot = window.WebChat.createDirectLine({
-            token: '@Model.DirectLineToken',
-            user: user,
-            speechOptions: speechOptions,
-            resize: 'detect'
+            token: directLineToken,
+            userID: userId
         });
 
         window.WebChat.renderWebChat({
-            directLine: bot,
+            directLine: bot, 
+            userID: userId,
             botAvatarInitials: 'VA',
-            userAvatarInitials: userInitials
+            userAvatarInitials: userInitials,
+            webSpeechPonyfillFactory: speechFactory
         }, document.getElementById('webchat'));
-
-        // Messages sent in web chat are labeled default-user, so the startup event
-        // will send it from the same id to prevent multiple occurences of ConversationUpdate activities.
-        var defaultUser = { id: 'default-user', name: 'default-user', role: 'user' };
-        bot.postActivity({
-            from: defaultUser,
-            name: 'startConversation',
-            type: 'event',
-            value: ''
-        })
-        .subscribe(function (id) {
-            console.log('Event "startConversation" sent');
-            });
-    </script>
+    })().catch(err => alert(err));
+</script>
