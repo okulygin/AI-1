@@ -16,10 +16,10 @@ using HtmlAgilityPack;
 using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.Util;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.Util;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using static CalendarSkill.Dialogs.Shared.DialogOptions.ShowMeetingsDialogOptions;
 using static Microsoft.Recognizers.Text.Culture;
@@ -193,7 +193,7 @@ namespace CalendarSkill.Dialogs.JoinEvent
                     return await sc.CancelAllDialogsAsync();
                 }
 
-                if (generalTopIntent == General.Intent.Next && state.SummaryEvents != null)
+                if (generalTopIntent == General.Intent.ShowNext && state.SummaryEvents != null)
                 {
                     if ((state.ShowEventIndex + 1) * state.PageSize < state.SummaryEvents.Count)
                     {
@@ -206,7 +206,7 @@ namespace CalendarSkill.Dialogs.JoinEvent
 
                     return await sc.ReplaceDialogAsync(Actions.ConnectToMeeting, sc.Options);
                 }
-                else if (generalTopIntent == General.Intent.Previous && state.SummaryEvents != null)
+                else if (generalTopIntent == General.Intent.ShowPrevious && state.SummaryEvents != null)
                 {
                     if (state.ShowEventIndex > 0)
                     {

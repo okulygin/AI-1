@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.Util;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.Util;
 using ToDoSkill.Dialogs.Shared;
 using ToDoSkill.Dialogs.Shared.Resources;
 using ToDoSkill.Dialogs.ShowToDo.Resources;
@@ -153,7 +153,7 @@ namespace ToDoSkill.Dialogs.ShowToDo
                             await sc.Context.SendActivityAsync(response);
                         }
                     }
-                    else if (topIntent == ToDoLU.Intent.ShowNextPage || generalTopIntent == General.Intent.Next)
+                    else if (topIntent == ToDoLU.Intent.ShowNextPage || generalTopIntent == General.Intent.ShowNext)
                     {
                         if (state.IsLastPage)
                         {
@@ -176,7 +176,7 @@ namespace ToDoSkill.Dialogs.ShowToDo
                             }
                         }
                     }
-                    else if (topIntent == ToDoLU.Intent.ShowPreviousPage || generalTopIntent == General.Intent.Previous)
+                    else if (topIntent == ToDoLU.Intent.ShowPreviousPage || generalTopIntent == General.Intent.ShowPrevious)
                     {
                         if (state.IsFirstPage)
                         {

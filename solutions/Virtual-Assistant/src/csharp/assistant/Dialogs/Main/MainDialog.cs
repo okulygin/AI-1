@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Proactive;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.TaskExtensions;
+using Microsoft.Bot.Builder.Solutions.Telemetry;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Dialogs;
-using Microsoft.Bot.Solutions.Proactive;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.TaskExtensions;
-using Microsoft.Bot.Solutions.Telemetry;
 using Newtonsoft.Json;
 using VirtualAssistant.Dialogs.Escalate;
 using VirtualAssistant.Dialogs.Main.Resources;
@@ -72,6 +72,39 @@ namespace VirtualAssistant.Dialogs.Main
             }
         }
 
+        protected override async Task<InterruptionAction> OnInterruptDialogAsync(DialogContext dc, CancellationToken cancellationToken)
+        {
+            if (dc.Context.Activity.Type == ActivityTypes.Message)
+            {
+                // Adaptive card responses come through with empty text properties
+                if (!string.IsNullOrEmpty(dc.Context.Activity.Text))
+                {
+                    // get current activity locale
+                    var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                    var localeConfig = _services.LocaleConfigurations[locale];
+
+                    // check luis intent
+                    var luisService = localeConfig.LuisServices["general"];
+                    var luisResult = await luisService.RecognizeAsync<General>(dc.Context, cancellationToken);
+                    var intent = luisResult.TopIntent().intent;
+
+                    // TODO - Evolve this pattern
+                    if (luisResult.TopIntent().score > 0.5)
+                    {
+                        switch (intent)
+                        {
+                            case General.Intent.Logout:
+                                {
+                                    return await LogoutAsync(dc);
+                                }
+                        }
+                    }
+                }
+            }
+
+            return InterruptionAction.NoAction;
+        }
+
         protected override async Task RouteAsync(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
             var parameters = await _parametersAccessor.GetAsync(dc.Context, () => new Dictionary<string, object>());
@@ -100,13 +133,6 @@ namespace VirtualAssistant.Dialogs.Main
                         {
                             switch (luisIntent)
                             {
-                                case General.Intent.Greeting:
-                                    {
-                                        // send greeting response
-                                        await _responder.ReplyWith(dc.Context, MainResponses.ResponseIds.Greeting);
-                                        break;
-                                    }
-
                                 case General.Intent.Help:
                                     {
                                         // send help response
@@ -134,9 +160,8 @@ namespace VirtualAssistant.Dialogs.Main
                                         break;
                                     }
 
-                                case General.Intent.Next:
-                                case General.Intent.Previous:
-                                case General.Intent.ReadMore:
+                                case General.Intent.ShowNext:
+                                case General.Intent.ShowPrevious:
                                     {
                                         var lastExecutedIntent = virtualAssistantState.LastIntent;
                                         if (lastExecutedIntent != null)
@@ -173,11 +198,19 @@ namespace VirtualAssistant.Dialogs.Main
                         virtualAssistantState.LastIntent = intent.ToString();
                         var matchedSkill = _skillRouter.IdentifyRegisteredSkill(intent.ToString());
 
-                        await RouteToSkillAsync(dc, new SkillDialogOptions()
+                        if (matchedSkill != null)
                         {
-                            SkillDefinition = matchedSkill,
-                            Parameters = parameters,
-                        });
+                            await RouteToSkillAsync(dc, new SkillDialogOptions()
+                            {
+                                SkillDefinition = matchedSkill,
+                                Parameters = parameters,
+                            });
+                        }
+                        else
+                        {
+                            // Dispatch indicated a skill but we couldn't map to an available skill.
+                            await _responder.ReplyWith(dc.Context, MainResponses.ResponseIds.SkillNotFound);
+                        }
 
                         break;
                     }
@@ -194,7 +227,21 @@ namespace VirtualAssistant.Dialogs.Main
                         break;
                     }
 
+                case Dispatch.Intent.q_Chitchat:
+                    {
+                        var qnaService = localeConfig.QnAServices["chitchat"];
+                        var answers = await qnaService.GetAnswersAsync(dc.Context);
+                        if (answers != null && answers.Count() > 0)
+                        {
+                            await _responder.ReplyWith(dc.Context, MainResponses.ResponseIds.Qna, answers[0].Answer);
+                        }
+
+                        break;
+                    }
+
+
                 case Dispatch.Intent.None:
+                default:
                     {
                         // No intent was identified, send confused message
                         await _responder.ReplyWith(dc.Context, MainResponses.ResponseIds.Confused);

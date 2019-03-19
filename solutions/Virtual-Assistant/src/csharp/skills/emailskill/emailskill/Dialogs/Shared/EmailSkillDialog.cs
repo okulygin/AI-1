@@ -20,14 +20,14 @@ using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using Microsoft.Bot.Builder.Solutions.Authentication;
+using Microsoft.Bot.Builder.Solutions.Prompts;
+using Microsoft.Bot.Builder.Solutions.Resources;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.Telemetry;
+using Microsoft.Bot.Builder.Solutions.Util;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Authentication;
-using Microsoft.Bot.Solutions.Prompts;
-using Microsoft.Bot.Solutions.Resources;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.Telemetry;
-using Microsoft.Bot.Solutions.Util;
 using Microsoft.Graph;
 using Microsoft.Recognizers.Text;
 using Newtonsoft.Json.Linq;
@@ -176,12 +176,12 @@ namespace EmailSkill.Dialogs.Shared
                 var generalLuisResult = state.GeneralLuisResult;
                 var generalTopIntent = generalLuisResult?.TopIntent().intent;
 
-                if (skillLuisResult == EmailLU.Intent.ShowNext || generalTopIntent == General.Intent.Next)
+                if (skillLuisResult == EmailLU.Intent.ShowNext || generalTopIntent == General.Intent.ShowNext)
                 {
                     state.ShowEmailIndex++;
                     state.ReadEmailIndex = 0;
                 }
-                else if ((skillLuisResult == EmailLU.Intent.ShowPrevious || generalTopIntent == General.Intent.Previous) && state.ShowEmailIndex >= 0)
+                else if ((skillLuisResult == EmailLU.Intent.ShowPrevious || generalTopIntent == General.Intent.ShowPrevious) && state.ShowEmailIndex >= 0)
                 {
                     state.ShowEmailIndex--;
                     state.ReadEmailIndex = 0;
@@ -1192,6 +1192,8 @@ namespace EmailSkill.Dialogs.Shared
                         case EmailLU.Intent.CheckMessages:
                         case EmailLU.Intent.SearchMessages:
                         case EmailLU.Intent.ReadAloud:
+                        case EmailLU.Intent.ShowNext:
+                        case EmailLU.Intent.ShowPrevious:
                             {
                                 // Get email search type
                                 if (dc.Context.Activity.Text != null)
@@ -1245,20 +1247,12 @@ namespace EmailSkill.Dialogs.Shared
                                     }
                                 }
 
-                                if (entity.SenderNamePattern != null)
-                                {
-                                    state.SenderName = entity.SenderNamePattern[0];
-                                }
-                                else if (entity.SenderName != null)
+                                if (entity.SenderName != null)
                                 {
                                     state.SenderName = entity.SenderName[0];
                                 }
 
-                                if (entity.EmailSubjectPattern != null)
-                                {
-                                    state.SearchTexts = entity.EmailSubjectPattern[0];
-                                }
-                                else if (entity.SearchTexts != null)
+                                if (entity.SearchTexts != null)
                                 {
                                     state.SearchTexts = entity.SearchTexts[0];
                                 }
@@ -1346,7 +1340,7 @@ namespace EmailSkill.Dialogs.Shared
         protected bool IsReadMoreIntent(General.Intent? topIntent, string userInput)
         {
             var isReadMoreUserInput = userInput == null ? false : userInput.ToLowerInvariant().Contains(CommonStrings.More);
-            return topIntent == General.Intent.ReadMore && isReadMoreUserInput;
+            return topIntent == General.Intent.ShowNext && isReadMoreUserInput;
         }
 
         // This method is called by any waterfall step that throws an exception to ensure consistency

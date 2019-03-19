@@ -9,13 +9,13 @@ using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using Microsoft.Bot.Builder.Solutions.Authentication;
+using Microsoft.Bot.Builder.Solutions.Prompts;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.Telemetry;
+using Microsoft.Bot.Builder.Solutions.Util;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Authentication;
-using Microsoft.Bot.Solutions.Prompts;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.Telemetry;
-using Microsoft.Bot.Solutions.Util;
 using Microsoft.Recognizers.Text;
 using Newtonsoft.Json.Linq;
 using ToDoSkill.Dialogs.AddToDo.Resources;
@@ -190,7 +190,7 @@ namespace ToDoSkill.Dialogs.Shared
                     state.GoBackToStart = false;
                     await DigestToDoLuisResult(sc);
                 }
-                else if (topIntent == ToDoLU.Intent.ShowNextPage || generalTopIntent == General.Intent.Next)
+                else if (topIntent == ToDoLU.Intent.ShowNextPage || generalTopIntent == General.Intent.ShowNext)
                 {
                     state.IsLastPage = false;
                     if ((state.ShowTaskPageIndex + 1) * state.PageSize < state.AllTasks.Count)
@@ -202,7 +202,7 @@ namespace ToDoSkill.Dialogs.Shared
                         state.IsLastPage = true;
                     }
                 }
-                else if (topIntent == ToDoLU.Intent.ShowPreviousPage || generalTopIntent == General.Intent.Previous)
+                else if (topIntent == ToDoLU.Intent.ShowPreviousPage || generalTopIntent == General.Intent.ShowPrevious)
                 {
                     state.IsFirstPage = false;
                     if (state.ShowTaskPageIndex > 0)
@@ -390,18 +390,6 @@ namespace ToDoSkill.Dialogs.Shared
                 if (entities.TaskContentML != null)
                 {
                     state.TaskContentML = entities.TaskContentML[0];
-                }
-
-                if (dc.Context.Activity.Text != null)
-                {
-                    var words = dc.Context.Activity.Text.Split(' ');
-                    foreach (var word in words)
-                    {
-                        if (word.Equals("all", StringComparison.OrdinalIgnoreCase))
-                        {
-                            state.MarkOrDeleteAllTasksFlag = true;
-                        }
-                    }
                 }
             }
             catch

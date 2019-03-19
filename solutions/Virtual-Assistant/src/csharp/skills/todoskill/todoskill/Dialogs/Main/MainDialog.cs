@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using Luis;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
 using Microsoft.Bot.Schema;
-using Microsoft.Bot.Solutions.Dialogs;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
 using ToDoSkill.Common;
 using ToDoSkill.Dialogs.AddToDo;
 using ToDoSkill.Dialogs.DeleteToDo;
@@ -132,9 +132,8 @@ namespace ToDoSkill.Dialogs.Main
 
                     case ToDoLU.Intent.None:
                         {
-                            if (generalTopIntent == General.Intent.Next
-                                || generalTopIntent == General.Intent.Previous
-                                || generalTopIntent == General.Intent.ReadMore)
+                            if (generalTopIntent == General.Intent.ShowNext
+                                || generalTopIntent == General.Intent.ShowPrevious)
                             {
                                 turnResult = await dc.BeginDialogAsync(nameof(ShowToDoItemDialog), skillOptions);
                             }

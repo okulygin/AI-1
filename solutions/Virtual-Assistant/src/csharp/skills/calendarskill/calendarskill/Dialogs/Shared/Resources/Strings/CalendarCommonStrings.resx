@@ -135,7 +135,7 @@
   <data name="MonthlyToken" xml:space="preserve">
     <value>monthly</value>
   </data>
-  <data name="Today" xml:space="preserve">
+  <data name="TodayLower" xml:space="preserve">
     <value>today</value>
   </data>
   <data name="WeeklyToken" xml:space="preserve">
@@ -194,5 +194,59 @@
   </data>
   <data name="OrdinalSuffixTh" xml:space="preserve">
     <value>{0}th</value>
+  </data>
+  <data name="Ago" xml:space="preserve">
+    <value>ago</value>
+  </data>
+  <data name="Before" xml:space="preserve">
+    <value>before</value>
+  </data>
+  <data name="HalfAnHour" xml:space="preserve">
+    <value>half an hour</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>later</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>next</value>
+  </data>
+  <data name="Now" xml:space="preserve">
+    <value>now</value>
+  </data>
+  <data name="TomorrowLower" xml:space="preserve">
+    <value>tomorrow</value>
+  </data>
+  <data name="YesterdayLower" xml:space="preserve">
+    <value>yesterday</value>
+  </data>
+  <data name="MyselfConst" xml:space="preserve">
+    <value>me</value>
+  </data>
+  <data name="AskForAttendee" xml:space="preserve">
+    <value>who.*(with|attend|join|come)</value>
+  </data>
+  <data name="AskForContent" xml:space="preserve">
+    <value>what.*(content|detail)</value>
+  </data>
+  <data name="AskForDetail" xml:space="preserve">
+    <value>what (is|are)?.*about</value>
+  </data>
+  <data name="AskForDuration" xml:space="preserve">
+    <value>how long</value>
+  </data>
+  <data name="AskForEndTime" xml:space="preserve">
+    <value>(when|what time).*(end|stop)</value>
+  </data>
+  <data name="AskForLocation" xml:space="preserve">
+    <value>where|what.*location|what.*room</value>
+  </data>
+  <data name="AskForStartTime" xml:space="preserve">
+    <value>(when|what time).*(start|begin)</value>
+  </data>
+  <data name="AskForTime" xml:space="preserve">
+    <value>when|what time</value>
+  </data>
+  <data name="AskForTitle" xml:space="preserve">
+    <value>what.*(title|subject)</value>
   </data>
 </root>

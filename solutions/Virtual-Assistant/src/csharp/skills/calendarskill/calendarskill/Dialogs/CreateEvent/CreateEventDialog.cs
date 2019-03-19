@@ -16,12 +16,12 @@ using CalendarSkill.Models;
 using CalendarSkill.ServiceClients;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Solutions.Dialogs;
-using Microsoft.Bot.Solutions.Extensions;
-using Microsoft.Bot.Solutions.Resources;
-using Microsoft.Bot.Solutions.Responses;
-using Microsoft.Bot.Solutions.Skills;
-using Microsoft.Bot.Solutions.Util;
+using Microsoft.Bot.Builder.Solutions.Dialogs;
+using Microsoft.Bot.Builder.Solutions.Extensions;
+using Microsoft.Bot.Builder.Solutions.Resources;
+using Microsoft.Bot.Builder.Solutions.Responses;
+using Microsoft.Bot.Builder.Solutions.Skills;
+using Microsoft.Bot.Builder.Solutions.Util;
 using Microsoft.Recognizers.Text.DateTime;
 using static CalendarSkill.Models.CreateEventStateModel;
 
@@ -54,12 +54,6 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 CreateEvent,
             };
 
-            var updateAddress = new WaterfallStep[]
-            {
-                UpdateAddress,
-                AfterUpdateAddress,
-            };
-
             var updateStartDate = new WaterfallStep[]
             {
                 UpdateStartDateForCreate,
@@ -86,7 +80,6 @@ namespace CalendarSkill.Dialogs.CreateEvent
 
             // Define the conversation flow using a waterfall model.
             AddDialog(new WaterfallDialog(Actions.CreateEvent, createEvent) { TelemetryClient = telemetryClient });
-            AddDialog(new WaterfallDialog(Actions.UpdateAddress, updateAddress) { TelemetryClient = telemetryClient });
             AddDialog(new WaterfallDialog(Actions.UpdateStartDateForCreate, updateStartDate) { TelemetryClient = telemetryClient });
             AddDialog(new WaterfallDialog(Actions.UpdateStartTimeForCreate, updateStartTime) { TelemetryClient = telemetryClient });
             AddDialog(new WaterfallDialog(Actions.UpdateDurationForCreate, updateDuration) { TelemetryClient = telemetryClient });
@@ -199,7 +192,7 @@ namespace CalendarSkill.Dialogs.CreateEvent
 
                 if (state.Attendees.Count == 0 && (!state.CreateHasDetail || state.RecreateState == RecreateEventState.Participants || state.AttendeesNameList.Count > 0))
                 {
-                    return await sc.BeginDialogAsync(Actions.UpdateAddress, cancellationToken: cancellationToken);
+                    return await sc.BeginDialogAsync(nameof(FindContactDialog), options: sc.Options, cancellationToken: cancellationToken);
                 }
                 else
                 {
@@ -359,7 +352,7 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 var attendeeConfirmString = string.Empty;
                 if (state.Attendees.Count > 0)
                 {
-                    var attendeeConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreate_Attendees, new StringDictionary()
+                    var attendeeConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreateAttendees, new StringDictionary()
                     {
                         { "Attendees", state.Attendees.ToSpeechString(CommonStrings.And, li => li.DisplayName ?? li.Address) }
                     });
@@ -369,7 +362,7 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 var subjectConfirmString = string.Empty;
                 if (!string.IsNullOrEmpty(state.Title))
                 {
-                    var subjectConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreate_Subject, new StringDictionary()
+                    var subjectConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreateSubject, new StringDictionary()
                     {
                         { "Subject", string.IsNullOrEmpty(state.Title) ? CalendarCommonStrings.Empty : state.Title }
                     });
@@ -379,7 +372,7 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 var locationConfirmString = string.Empty;
                 if (!string.IsNullOrEmpty(state.Location))
                 {
-                    var subjectConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreate_Location, new StringDictionary()
+                    var subjectConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreateLocation, new StringDictionary()
                     {
                         { "Location", string.IsNullOrEmpty(state.Location) ? CalendarCommonStrings.Empty : state.Location },
                     });
@@ -389,7 +382,7 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 var contentConfirmString = string.Empty;
                 if (!string.IsNullOrEmpty(state.Content))
                 {
-                    var contentConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreate_Content, new StringDictionary()
+                    var contentConfirmResponse = ResponseManager.GetResponse(CreateEventResponses.ConfirmCreateContent, new StringDictionary()
                     {
                         { "Content", string.IsNullOrEmpty(state.Content) ? CalendarCommonStrings.Empty : state.Content },
                     });
@@ -401,9 +394,9 @@ namespace CalendarSkill.Dialogs.CreateEvent
                 var tokens = new StringDictionary
                 {
                     { "AttendeesConfirm", attendeeConfirmString },
-                    { "Date", startDateTimeInUserTimeZone.ToSpeechDateString(true) },
-                    { "Time", startDateTimeInUserTimeZone.ToSpeechTimeString(true) },
-                    { "EndTime", endDateTimeInUserTimeZone.ToSpeechTimeString(true) },
+                    { "Date", startDateTimeInUserTimeZone.ToSpeechDateString(false) },
+                    { "Time", startDateTimeInUserTimeZone.ToSpeechTimeString(false) },
+                    { "EndTime", endDateTimeInUserTimeZone.ToSpeechTimeString(false) },
                     { "SubjectConfirm", subjectConfirmString },
                     { "LocationConfirm", locationConfirmString },
                     { "ContentConfirm", contentConfirmString },
@@ -486,72 +479,6 @@ namespace CalendarSkill.Dialogs.CreateEvent
             {
                 await HandleDialogExceptions(sc, ex);
                 return new DialogTurnResult(DialogTurnStatus.Cancelled, CommonUtil.DialogTurnResultCancelAllDialogs);
-            }
-            catch (Exception ex)
-            {
-                await HandleDialogExceptions(sc, ex);
-                return new DialogTurnResult(DialogTurnStatus.Cancelled, CommonUtil.DialogTurnResultCancelAllDialogs);
-            }
-        }
-
-        // update address waterfall steps
-        public async Task<DialogTurnResult> UpdateAddress(WaterfallStepContext sc, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            try
-            {
-                var state = await Accessor.GetAsync(sc.Context, cancellationToken: cancellationToken);
-                if (state.AttendeesNameList.Any())
-                {
-                    return await sc.NextAsync(cancellationToken: cancellationToken);
-                }
-
-                return await sc.PromptAsync(Actions.Prompt, new PromptOptions { Prompt = ResponseManager.GetResponse(CreateEventResponses.NoAttendees) }, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                await HandleDialogExceptions(sc, ex);
-                return new DialogTurnResult(DialogTurnStatus.Cancelled, CommonUtil.DialogTurnResultCancelAllDialogs);
-            }
-        }
-
-        public async Task<DialogTurnResult> AfterUpdateAddress(WaterfallStepContext sc, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            try
-            {
-                var state = await Accessor.GetAsync(sc.Context, cancellationToken: cancellationToken);
-                if (state.AttendeesNameList.Any())
-                {
-                    state.FirstEnterFindContact = true;
-                    return await sc.BeginDialogAsync(nameof(FindContactDialog), options: sc.Options, cancellationToken: cancellationToken);
-                }
-
-                if (sc.Result != null)
-                {
-                    sc.Context.Activity.Properties.TryGetValue("OriginText", out var content);
-                    var userInput = content != null ? content.ToString() : sc.Context.Activity.Text;
-                    if (state.EventSource != EventSource.Other)
-                    {
-                        if (userInput != null)
-                        {
-                            var nameList = userInput.Split(CreateEventWhiteList.GetContactNameSeparator(), StringSplitOptions.None)
-                                .Select(x => x.Trim())
-                                .Where(x => !string.IsNullOrWhiteSpace(x))
-                                .ToList();
-                            state.AttendeesNameList = nameList;
-                        }
-
-                        state.FirstEnterFindContact = true;
-                        return await sc.BeginDialogAsync(nameof(FindContactDialog), options: sc.Options, cancellationToken: cancellationToken);
-                    }
-                    else
-                    {
-                        return await sc.BeginDialogAsync(Actions.UpdateAddress, new UpdateAddressDialogOptions(UpdateAddressDialogOptions.UpdateReason.NotAnAddress), cancellationToken);
-                    }
-                }
-                else
-                {
-                    return await sc.NextAsync(cancellationToken: cancellationToken);
-                }
             }
             catch (Exception ex)
             {
