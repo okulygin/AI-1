@@ -260,7 +260,12 @@ FakesAssemblies/
 
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
-node_modules/
+/solutions/**/node_modules/
+/templates/**/node_modules/
+/lib/**/node_modules/
+/tools/**/node_modules/
+/skills/**/node_modules/
+/samples/**/node_modules/
 
 # Visual Studio 6 build log
 *.plg
@@ -334,6 +339,10 @@ ASALocalRun/
 # AppSettings
 **/appsettings.production.json
 **/appsettings.development.json
+**/cognitivemodels.production.json
+**/cognitivemodels.development.json
+**/skills.production.json
+**/skills.development.json
 
 # LUIS json files
 /solutions/**/*.luis
@@ -345,3 +354,28 @@ ASALocalRun/
 /solutions/**/.deployment
 /solutions/**/publish
 /solutions/**/publish.cmd
+**/Deployment/Resources/Dispatch/**
+**/Deployment/**/*.luis
+**/Deployment/**/*.qna
+**/deploy_log.txt
+**/deploy_cognitive_models_log.txt
+**/update_cognitive_models_log.txt
+**/add_remote_skill_log.txt
+**/remove_skill_log.txt
+**/publish_log.txt
+**/.deployment
+
+# Zip files
+*.7z
+*.jar
+*.rar
+*.zip
+*.gz
+*.tgz
+*.bzip
+*.bz2
+*.xz
+*.lzma
+*.cab
+.DS_Store
+/.project
